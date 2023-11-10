@@ -131,8 +131,10 @@ void checkDefaultValues(const testgen_r::RootRecord &r) {
     BOOST_CHECK_EQUAL(r.myarraywithDefaultValue[0], 2);
     BOOST_CHECK_EQUAL(r.myarraywithDefaultValue[1], 3);
     BOOST_CHECK(r.myfixedwithDefaultValue.is_val());
+    BOOST_CHECK(r.myfixedwithDefaultValue.idx_enum() == testgen_r::_bigrecord_r_Union__4__::Index::val);
     BOOST_CHECK_EQUAL(r.myfixedwithDefaultValue.get_val()[0], 0x01);
     BOOST_CHECK(r.byteswithDefaultValue.is_bytes());
+    BOOST_CHECK(r.byteswithDefaultValue.idx_enum() == testgen_r::_bigrecord_r_Union__5__::Index::bytes);
     BOOST_CHECK_EQUAL(r.byteswithDefaultValue.get_bytes()[0], 0xff);
     BOOST_CHECK_EQUAL(r.byteswithDefaultValue.get_bytes()[1], 0xaa);
 }

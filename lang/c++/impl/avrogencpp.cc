@@ -396,8 +396,17 @@ string CodeGen::generateUnionType(const NodePtr &n) {
         << "private:\n"
         << "    size_t idx_;\n"
         << "    " << anyNs << "::any value_;\n"
-        << "public:\n"
-        << "    size_t idx() const { return idx_; }\n";
+        << "public:\n";
+
+    os_ << "    enum class Index: size_t {\n";
+    for (size_t i = 0; i < c; ++i) {
+        const auto index_name = decorate(names[i]);
+        os_ << "        " << index_name << " = " << i << ",\n";
+    }
+    os_ << "    };\n";
+
+    os_  << "    size_t idx() const { return idx_; }\n";
+    os_  << "    Index idx_enum() const { return static_cast<Index>(idx_); }\n";
 
     for (size_t i = 0; i < c; ++i) {
         const NodePtr &nn = n->leafAt(i);
