@@ -326,6 +326,11 @@ static void generateGetterAndSetter(ostream &os,
                                     size_t idx, const std::string& anyNs) {
     string sn = " " + structName + "::";
 
+    os << "inline\n"
+       << "bool" << sn << "is_" << name << "() const {\n"
+       << "    return (idx_ == " << idx << ");\n"
+       << "}\n\n";
+
     os << "inline\n";
 
     os << type << sn << "get_" << name << "() const {\n"
@@ -407,7 +412,8 @@ string CodeGen::generateUnionType(const NodePtr &n) {
         } else {
             const string &type = types[i];
             const string &name = names[i];
-            os_ << "    " << type << " get_" << name << "() const;\n"
+            os_ << "    bool is_" << name << "() const;\n"
+                << "    " << type << " get_" << name << "() const;\n"
                                                         "    void set_"
                 << name << "(const " << type << "& v);\n";
             pendingGettersAndSetters.emplace_back(result, type, name, i);

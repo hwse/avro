@@ -98,8 +98,12 @@ void checkRecord(const T1 &r1, const T2 &r2) {
     BOOST_CHECK(r1.mymap == r2.mymap);
     BOOST_CHECK(r1.myarray == r2.myarray);
     BOOST_CHECK_EQUAL(r1.myunion.idx(), r2.myunion.idx());
+    BOOST_CHECK(r1.myunion.is_map());
+    BOOST_CHECK(r2.myunion.is_map());
     BOOST_CHECK(r1.myunion.get_map() == r2.myunion.get_map());
     BOOST_CHECK_EQUAL(r1.anotherunion.idx(), r2.anotherunion.idx());
+    BOOST_CHECK(r1.anotherunion.is_bytes());
+    BOOST_CHECK(r2.anotherunion.is_bytes());
     BOOST_CHECK(r1.anotherunion.get_bytes() == r2.anotherunion.get_bytes());
     BOOST_CHECK_EQUAL(r1.mybool, r2.mybool);
     BOOST_CHECK_EQUAL(r1.anothernested.inval1, r2.anothernested.inval1);
@@ -126,7 +130,9 @@ void checkDefaultValues(const testgen_r::RootRecord &r) {
     BOOST_CHECK_CLOSE(r.withDefaultValue.d1, 5.67, 1e-10);
     BOOST_CHECK_EQUAL(r.myarraywithDefaultValue[0], 2);
     BOOST_CHECK_EQUAL(r.myarraywithDefaultValue[1], 3);
+    BOOST_CHECK(r.myfixedwithDefaultValue.is_val());
     BOOST_CHECK_EQUAL(r.myfixedwithDefaultValue.get_val()[0], 0x01);
+    BOOST_CHECK(r.byteswithDefaultValue.is_bytes());
     BOOST_CHECK_EQUAL(r.byteswithDefaultValue.get_bytes()[0], 0xff);
     BOOST_CHECK_EQUAL(r.byteswithDefaultValue.get_bytes()[1], 0xaa);
 }
