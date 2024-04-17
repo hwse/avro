@@ -328,39 +328,37 @@ static void generateGetterAndSetter(ostream &os,
 
     os << "inline\n"
        << "bool" << sn << "is_" << name << "() const {\n"
-       << "    return (idx_ == " << idx << ");\n"
+       << "    return (value_.index() == " << idx << ");\n"
        << "}\n\n";
 
     os << "inline\n";
     os << "const " << type << "&" << sn << "get_" << name << "() const {\n"
-       << "    if (idx_ != " << idx << ") {\n"
+       << "    if (value_.index() != " << idx << ") {\n"
        << "        throw avro::Exception(\"Invalid type for "
        << "union " << structName << "\");\n"
        << "    }\n"
-       << "    return *" << anyNs << "::any_cast<" << type << " >(&value_);\n"
+       << "    return " << anyNs << "::get<" << type << " >(value_);\n"
        << "}\n\n";
 
     os << "inline\n";
     os << type << "&" << sn << "get_" << name << "() {\n"
-       << "    if (idx_ != " << idx << ") {\n"
+       << "    if (value_.index() != " << idx << ") {\n"
        << "        throw avro::Exception(\"Invalid type for "
        << "union " << structName << "\");\n"
        << "    }\n"
-       << "    return *" << anyNs << "::any_cast<" << type << " >(&value_);\n"
+       << "    return " << anyNs << "::get<" << type << " >(value_);\n"
        << "}\n\n";
 
 
     os << "inline\n"
        << "void" << sn << "set_" << name
        << "(const " << type << "& v) {\n"
-       << "    idx_ = " << idx << ";\n"
        << "    value_ = v;\n"
        << "}\n\n";
 
     os << "inline\n"
        << "void" << sn << "set_" << name
        << "(" << type << "&& v) {\n"
-       << "    idx_ = " << idx << ";\n"
        << "    value_ = std::move(v);\n"
        << "}\n\n";
 }
@@ -368,9 +366,9 @@ static void generateGetterAndSetter(ostream &os,
 static void generateConstructor(ostream &os,
                                 const string &structName, bool initMember,
                                 const string &type) {
-    os << "inline " << structName << "::" << structName << "() : idx_(0)";
+    os << "inline " << structName << "::" << structName << "() ";
     if (initMember) {
-        os << ", value_(" << type << "())";
+        os << ": value_(" << type << "())";
     }
     os << " { }\n";
 }
@@ -410,8 +408,11 @@ string CodeGen::generateUnionType(const NodePtr &n) {
 
     os_ << "struct " << result << " {\n"
         << "private:\n"
-        << "    size_t idx_;\n"
-        << "    " << anyNs << "::any value_;\n"
+        << "    std::variant<\n";
+    for (size_t i = 0; i < c; ++i) {
+        os_ << "        " << types[i] << (i < c - 1 ? "," : "") << "\n";
+    }
+    os_ << "    > value_;\n"
         << "public:\n";
 
     os_ << "    enum class Index: size_t {\n";
@@ -421,18 +422,17 @@ string CodeGen::generateUnionType(const NodePtr &n) {
     }
     os_ << "    };\n";
 
-    os_  << "    size_t idx() const { return idx_; }\n";
-    os_  << "    Index idx_enum() const { return static_cast<Index>(idx_); }\n";
+    os_  << "    size_t idx() const { return value_.index(); }\n";
+    os_  << "    Index idx_enum() const { return static_cast<Index>(value_.index()); }\n";
 
     for (size_t i = 0; i < c; ++i) {
         const NodePtr &nn = n->leafAt(i);
         if (nn->type() == avro::AVRO_NULL) {
             os_ << "    bool is_null() const {\n"
-                << "        return (idx_ == " << i << ");\n"
+                << "        return (value_.index() == " << i << ");\n"
                 << "    }\n"
                 << "    void set_null() {\n"
-                << "        idx_ = " << i << ";\n"
-                << "        value_ = " << anyNs << "::any();\n"
+                << "        value_ = avro::null{};\n"
                 << "    }\n";
         } else {
             const string &type = types[i];
@@ -763,12 +763,12 @@ void CodeGen::generate(const ValidSchema &schema) {
 
     os_ << "#include <sstream>\n";
 #if __cplusplus >= 201703L
-    os_ << "#include <any>\n";
+    os_ << "#include <variant>\n";
 #else
     if (useCpp17_)
-        os_ << "#include <any>\n";
+        os_ << "#include <variant>\n";
     else
-        os_ << "#include \"boost/any.hpp\"\n";
+        os_ << "#include \"boost/variant.hpp\"\n";
 #endif
     os_ << "#include \"" << includePrefix_ << "Specific.hh\"\n"
         << "#include \"" << includePrefix_ << "Encoder.hh\"\n"
